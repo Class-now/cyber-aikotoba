@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>その通知、ほんもの？</title>
+<meta name="description" content="スマホに届く通知・メッセージ・電話を「あやしい」か「だいじょうぶ」か見分ける、3分でできるサイバーセキュリティ啓発ミニゲーム。">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--fg:#1d1d1f;--muted:#6b6b70;--line:#e2dfd8;--accent:#2f6fde;--bad:#d13b3b;--good:#1f8f55;--phone:#1d1d1f;--bubble:#eef0f4}
+@media (prefers-color-scheme:dark){:root{--bg:#141416;--card:#1f1f22;--fg:#ececee;--muted:#a3a3a8;--line:#333338;--accent:#6b9cff;--bad:#ff6b6b;--good:#4cc98a;--phone:#000;--bubble:#2b2c31}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;line-height:1.7;font-size:16px}
+main{max-width:30rem;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.5rem;line-height:1.35;margin:.2em 0 .3em}
+h2{font-size:1.15rem;margin:1.6em 0 .4em}
+p{margin:.6em 0}
+.sub{color:var(--muted);font-size:.92rem}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:14px 16px;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.row{display:flex;gap:10px;margin-top:14px}
+.row .btn{flex:1}
+.btn.bad{background:var(--bad);color:#fff}
+.btn.good{background:var(--good);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.hud{display:flex;justify-content:space-between;color:var(--muted);font-size:.9rem;margin-bottom:8px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.phone{background:var(--phone);border-radius:28px;padding:14px 10px 18px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.screen{background:var(--card);border-radius:20px;padding:12px 12px 16px;min-height:220px}
+.app{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);margin-bottom:8px}
+.icon{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:#fff;font-size:.8rem;font-weight:700;flex:none}
+.from{font-weight:700;font-size:.98rem;margin-bottom:4px}
+.msg{background:var(--bubble);border-radius:14px;padding:10px 12px;white-space:pre-wrap;word-break:break-all;font-size:.95rem}
+.link{color:var(--accent);text-decoration:underline}
+.hl{background:rgba(209,59,59,.18);border-radius:4px;padding:0 2px;outline:1.5px solid var(--bad)}
+.hlg{background:rgba(31,143,85,.16);border-radius:4px;padding:0 2px;outline:1.5px solid var(--good)}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.verdict b.ok{color:var(--good)}
+.verdict b.ng{color:var(--bad)}
+.tip{margin-top:6px;font-size:.93rem}
+.hidden{display:none}
+.score{font-size:2.6rem;font-weight:800;margin:.1em 0}
+ol.rules{padding-left:1.3em}
+ol.rules li{margin:.45em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:14px 0}
+footer{margin-top:28px;color:var(--muted);font-size:.82rem}
+a{color:var(--accent)}
+.call{text-align:center;padding:18px 0 6px}
+.call .who{font-size:1.25rem;font-weight:700}
+.call .num{color:var(--muted);font-size:.88rem}
+.call .say{margin-top:12px;text-align:left}
+</style>
+</head>
+<body>
+<main>
+
+<section id="start">
+  <p class="sub">サイバーセキュリティ啓発ミニゲーム</p>
+  <h1>その通知、ほんもの？</h1>
+  <p>スマホに届く通知・メッセージ・電話が 12 件。ひとつずつ見て、<b>「あやしい」</b>か<b>「だいじょうぶ」</b>かを選んでください。答えるたびに、見分ける手がかりを表示します。</p>
+  <p class="sub">所要 3 分。登録・個人情報の入力はありません。画面の会社名・電話番号・URL はすべて架空です。</p>
+  <div class="card">
+    <b>こんな人に</b>
+    <p style="margin:.3em 0 0">スマホを使い始めた家族と一緒に／授業や研修の最初の 5 分に／自分の「つい押しちゃう」癖を確かめたいときに</p>
+  </div>
+  <button class="btn primary" id="go">はじめる</button>
+</section>
+
+<section id="play" class="hidden">
+  <div class="hud"><span id="count">1 / 12</span><span id="pts">正解 0</span></div>
+  <div class="bar"><i id="prog"></i></div>
+  <div class="phone"><div class="screen" id="screen"></div></div>
+  <div class="row" id="answer">
+    <button class="btn bad" data-a="bad">あやしい</button>
+    <button class="btn good" data-a="ok">だいじょうぶ</button>
+  </div>
+  <div class="verdict hidden" id="verdict"></div>
+  <div class="row hidden" id="nextrow"><button class="btn primary" id="next">つぎへ</button></div>
+</section>
+
+<section id="end" class="hidden">
+  <p class="sub">結果</p>
+  <div class="score" id="final"></div>
+  <p id="rank"></p>
+  <h2>今日から使える 5 つの決まり</h2>
+  <ol class="rules">
+    <li><b>メッセージの中のリンクは押さない。</b>宅配・銀行・携帯会社の連絡は、ふだん使っている公式アプリかブックマークから開いて確かめる。</li>
+    <li><b>「今すぐ」「本日中」「停止」は、いったん止まる合図。</b>急がせるのは、考えさせないための手口です。</li>
+    <li><b>電話のお金の話は、自分からかけ直す。</b>相手が名乗った番号ではなく、電話帳に登録してある番号に。</li>
+    <li><b>家族で「合言葉」を決めておく。</b>ネットに一度も書いたことのない言葉を、口頭だけで。声や顔は AI でまねできても、台所で決めた一言はまねできません。</li>
+    <li><b>押してしまったら、ひとりで抱えない。</b>カード会社・銀行に連絡して止め、警察相談専用電話 <b>#9110</b> か消費者ホットライン <b>188</b> に相談する。</li>
+  </ol>
+  <div class="card">
+    <b>もっと読む</b>
+    <p style="margin:.3em 0 0">4 番目の「合言葉」は、AI の声で息子になりすました電話を母が見抜く短編小説で描きました。<br><a href="../">短編「合言葉は、ポーランド語で」を読む</a></p>
+  </div>
+  <div class="row">
+    <button class="btn primary" id="again">もう一度</button>
+    <button class="btn ghost" id="share">結果をコピー</button>
+  </div>
+  <p class="sub" id="copied"></p>
+</section>
+
+<footer>
+  <p>制作: 高倉 正太郎（國學院大學 文学部）／2026年11月公開。授業・研修・家庭での利用は自由です（出典の記載をお願いします）。</p>
+  <p>相談窓口: 警察相談専用電話 #9110／消費者ホットライン 188／フィッシング対策協議会（報告先）</p>
+</footer>
+
+</main>
+<script>
+"use strict";
+const Q = [
+  {kind:"sms", icon:"✉", color:"#8e8e93", app:"メッセージ", from:"+81 70-1846-29xx",
+   body:'【さくら運輸】お荷物をお届けにあがりましたが不在のため持ち帰りました。下記よりご確認ください。\n<span class="link hl">http://sakura-unyu.delivery-check.top/jp</span>',
+   ans:"bad", why:"宅配業者を名乗る SMS のリンクは、偽サイトにつながる定番の手口です。ドメインが会社のものではなく「.top」で終わり、送り主も個人の携帯番号になっています。",
+   tip:"再配達は、伝票の番号を使って公式アプリか公式サイトから。"},
+  {kind:"app", icon:"🏦", color:"#1f6f5c", app:"みなと銀行アプリ", from:"みなと銀行",
+   body:'お振込みが完了しました。\n振込先: ヤマダ タロウ\n金額: 3,000円\n<span class="hlg">（アプリ内のお知らせ。リンクはありません）</span>',
+   ans:"ok", why:"自分で入れた銀行の公式アプリからの通知で、リンクもなく、自分が今した操作の結果です。これはふつうの通知。",
+   tip:"見覚えのない取引の通知なら、通知からではなくアプリを自分で開いて確かめます。"},
+  {kind:"mail", icon:"@", color:"#d9534f", app:"メール", from:"みなと銀行 <support@minato-bank-security.com>",
+   body:'【重要】お客様の口座が<span class="hl">一時的に凍結</span>されています。<span class="hl">本日中</span>に本人確認を行わない場合、口座のご利用ができなくなります。\n▼本人確認はこちら\n<span class="link hl">https://minato-bank-security.com/login</span>',
+   ans:"bad", why:"「凍結」「本日中」で急がせ、ログインさせようとするのはフィッシングの典型です。銀行がメールのリンクから暗証番号やパスワードを入れさせることはありません。",
+   tip:"差出人の名前は自由に書けます。名前ではなく、中身が「急がせてリンクを押させる」かどうかで判断します。"},
+  {kind:"call", from:"息子（声）", num:"080-xxxx-5521（登録外の番号）",
+   body:'「母さん、俺。スマホ落として番号変わった。会社の書類が入った鞄を電車に置き忘れて、<span class="hl">今日中に150万</span>いるんだ。上司の人が取りに行くから…」\n声も話し方も、本人そっくり。',
+   ans:"bad", why:"AI で本人の声をまねる「ボイスクローン詐欺」が実際に起きています。番号が変わった・今日中にお金・代わりの人が受け取りに来る、がそろったら詐欺を疑います。",
+   tip:"いったん切って、電話帳に登録してある本人の番号にかけ直す。家族の合言葉を聞くのも有効です。"},
+  {kind:"sms", icon:"✉", color:"#8e8e93", app:"メッセージ", from:"SMS認証",
+   body:'認証コード: <span class="hlg">482913</span>\nこのコードを<span class="hlg">他人に教えないでください</span>。（あなたが今ログインした操作によるものです）',
+   ans:"ok", why:"自分がログインした直後に届く確認コードは正常な通知です。大事なのは、このコードを誰にも教えないこと。",
+   tip:"「間違えて送ったのでコードを教えて」と頼んでくる人がいたら、それは乗っ取りの手口です。"},
+  {kind:"chat", icon:"💬", color:"#06a64f", app:"チャット", from:"ゆい（友だち）",
+   body:'ごめん急ぎで！<span class="hl">コンビニで電子マネーのカード</span>買ってきてくれない？\n<span class="hl">3万円分</span>、番号の写真送ってほしい。あとで返すから🙏',
+   ans:"bad", why:"友だちのアカウントが乗っ取られ、電子マネーのカードを買わせる詐欺です。カードの番号を送った時点で、お金は戻りません。",
+   tip:"チャットではなく、電話など別の方法で本人に確かめます。乗っ取られていたら本人に知らせてあげましょう。"},
+  {kind:"popup", icon:"⚠", color:"#d13b3b", app:"ブラウザ", from:"警告",
+   body:'<span class="hl">ウイルスが3件検出されました！</span>\nこのままではデータが消失します。\n<span class="hl">今すぐサポートに電話: 050-xxxx-xxxx</span>\n（ピーピーという警告音が鳴っている）',
+   ans:"bad", why:"ブラウザに出る偽の警告画面で、電話をかけさせて遠隔操作ソフトを入れさせたり、サポート代を払わせたりする「サポート詐欺」です。",
+   tip:"電話はかけず、タブを閉じる。閉じられなければブラウザを終了するか、端末を再起動します。"},
+  {kind:"app", icon:"⚙", color:"#5856d6", app:"設定", from:"ソフトウェア・アップデート",
+   body:'新しいバージョンが利用可能です。\nセキュリティの修正が含まれています。\n<span class="hlg">設定 ＞ 一般 ＞ ソフトウェア・アップデート</span>',
+   ans:"ok", why:"端末の設定アプリからの更新の知らせは本物。セキュリティの修正は早めに入れるのが安全です。",
+   tip:"アップデートは「設定」から。メールや広告の「更新してください」のリンクからは入れません。"},
+  {kind:"sms", icon:"✉", color:"#8e8e93", app:"メッセージ", from:"国税庁",
+   body:'【国税庁】未払いの税金があります。<span class="hl">差し押さえ</span>を避けるため、下記より<span class="hl">電子マネーまたはクレジットカード</span>でお支払いください。\n<span class="link hl">https://nta-go-jp.payment-xyz.com</span>',
+   ans:"bad", why:"役所が SMS のリンクから税金をカードや電子マネーで払わせることはありません。「go.jp」に似せたアドレスにも注意。",
+   tip:"税や年金の連絡は郵便が基本。心配なら、役所の代表番号を自分で調べて問い合わせます。"},
+  {kind:"chat", icon:"💬", color:"#06a64f", app:"チャット", from:"お母さん",
+   body:'今日の夕飯、何時ごろ帰る？\n<span class="hlg">お父さんが駅まで迎えに行くって</span>',
+   ans:"ok", why:"いつもの相手から、いつもの用件。お金・リンク・急ぎの要求がありません。",
+   tip:"「お金」「リンク」「急ぎ」の 3 つがそろっていないかを見るだけで、多くの詐欺はふるい落とせます。"},
+  {kind:"mail", icon:"@", color:"#d9534f", app:"メール", from:"ショッピングサイト <no-reply@shop-account-verify.net>",
+   body:'お客様のアカウントで<span class="hl">不審なログイン</span>がありました。\n<span class="hl">24時間以内</span>に下記からパスワードを再設定してください。\n<span class="link hl">https://shop-account-verify.net/reset</span>',
+   ans:"bad", why:"「不審なログイン」と不安をあおり、偽のログイン画面でパスワードを盗む手口です。差出人のアドレスがお店のものではありません。",
+   tip:"本当に心配なら、ブックマークか公式アプリから自分でログインし、ログイン履歴を確かめます。パスワードの使い回しもやめましょう。"},
+  {kind:"chat", icon:"💬", color:"#06a64f", app:"チャット（知らない人）", from:"Sakura_invest",
+   body:'はじめまして。投資の勉強会で見かけました😊\n私の先生のグループに入ると、<span class="hl">月利20%</span>が<span class="hl">確実</span>です。\nまずは<span class="hl">少額から</span>体験してみませんか？',
+   ans:"bad", why:"SNS で近づき、高い利回りを「確実」とうたう投資詐欺です。最初は少額で利益を見せ、あとで大きく振り込ませます。",
+   tip:"「確実にもうかる」投資はありません。知らない相手からの投資の誘いは、返信せずにブロックします。"}
+];
+
+const $ = id => document.getElementById(id);
+let order = [], i = 0, right = 0, answered = false;
+
+function shuffle(a){ for(let k=a.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [a[k],a[j]]=[a[j],a[k]]; } return a; }
+
+function render(q){
+  if(q.kind === "call"){
+    return '<div class="app"><span class="icon" style="background:#1f8f55">☎</span>着信</div>' +
+      '<div class="call"><div class="who">'+q.from+'</div><div class="num">'+q.num+'</div></div>' +
+      '<div class="msg say">'+q.body+'</div>';
+  }
+  return '<div class="app"><span class="icon" style="background:'+q.color+'">'+q.icon+'</span>'+q.app+'</div>' +
+    '<div class="from">'+q.from+'</div><div class="msg">'+q.body+'</div>';
+}
+
+function show(){
+  const q = order[i];
+  answered = false;
+  $("screen").innerHTML = render(q);
+  $("screen").querySelectorAll(".hl,.hlg").forEach(e => e.dataset.cls = e.className);
+  $("screen").querySelectorAll(".hl,.hlg").forEach(e => e.className = e.className.replace(/\bhlg?\b/, "").trim());
+  $("count").textContent = (i+1) + " / " + order.length;
+  $("pts").textContent = "正解 " + right;
+  $("prog").style.width = (i / order.length * 100) + "%";
+  $("verdict").classList.add("hidden");
+  $("nextrow").classList.add("hidden");
+  $("answer").classList.remove("hidden");
+  document.querySelectorAll("#answer .btn").forEach(b => b.disabled = false);
+}
+
+function answer(a){
+  if(answered) return;
+  answered = true;
+  const q = order[i];
+  const ok = a === q.ans;
+  if(ok) right++;
+  $("screen").querySelectorAll("[data-cls]").forEach(e => e.className = e.dataset.cls);
+  document.querySelectorAll("#answer .btn").forEach(b => b.disabled = true);
+  $("answer").classList.add("hidden");
+  const label = q.ans === "bad" ? "あやしい" : "だいじょうぶ";
+  $("verdict").innerHTML = (ok ? '<b class="ok">正解！</b>' : '<b class="ng">ざんねん。</b>') +
+    ' 答えは「'+label+'」<p class="tip">'+q.why+'</p><p class="tip"><b>こうする:</b> '+q.tip+'</p>';
+  $("verdict").classList.remove("hidden");
+  $("nextrow").classList.remove("hidden");
+  $("pts").textContent = "正解 " + right;
+  $("next").textContent = i + 1 < order.length ? "つぎへ" : "結果を見る";
+  $("next").focus();
+}
+
+function end(){
+  $("play").classList.add("hidden");
+  $("end").classList.remove("hidden");
+  $("final").textContent = right + " / " + order.length;
+  let r;
+  if(right === order.length) r = "満点です。この見分け方を、家族や友だちにも教えてあげてください。";
+  else if(right >= 10) r = "かなり見抜けています。間違えた手口だけ、下の決まりで確かめておきましょう。";
+  else if(right >= 7) r = "半分以上は見抜けました。「急がせる」「リンク」「お金」の 3 つに注目すると、もっと見分けやすくなります。";
+  else r = "詐欺はプロが本物そっくりに作っています。見抜けなくても大丈夫。下の 5 つの決まりを守れば、被害はふせげます。";
+  $("rank").textContent = r;
+  window.scrollTo(0, 0);
+}
+
+function start(){
+  order = shuffle(Q.slice());
+  i = 0; right = 0;
+  $("start").classList.add("hidden");
+  $("end").classList.add("hidden");
+  $("play").classList.remove("hidden");
+  $("copied").textContent = "";
+  show();
+}
+
+$("go").onclick = start;
+$("again").onclick = start;
+document.querySelectorAll("#answer .btn").forEach(b => b.onclick = () => answer(b.dataset.a));
+$("next").onclick = () => { i++; if(i < order.length) show(); else end(); };
+$("share").onclick = () => {
+  const t = "「その通知、ほんもの？」で " + right + " / " + order.length + " 問見抜けました。 " + location.href;
+  const done = () => { $("copied").textContent = "コピーしました。"; };
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(done, () => { $("copied").textContent = t; });
+  else $("copied").textContent = t;
+};
+</script>
+</body>
+</html>
